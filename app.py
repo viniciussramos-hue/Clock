@@ -26,35 +26,38 @@ components.html("""
         .central-card {
             background-color: #161616;
             border: 2px solid #FF4B4B;
-            padding: 25px;
+            padding: 30px;
             border-radius: 20px;
             box-shadow: 0px 8px 30px rgba(0,0,0,0.8);
             text-align: center;
-            width: 500px;
+            width: 520px;
         }
 
+        /* Horas maiores e mais destacadas */
         .word-time {
             color: #FF4B4B;
-            font-size: 2rem;
-            font-weight: bold;
+            font-size: 2.7rem;
+            font-weight: 800;
             margin: 0;
+            line-height: 1.2;
         }
 
         .digital-time {
             color: #999;
-            font-size: 0.95rem;
-            margin: 6px 0 12px 0;
+            font-size: 1rem;
+            margin: 8px 0 15px 0;
             letter-spacing: 1px;
         }
 
         .divider {
             border-top: 1px solid #333;
-            margin: 12px 0;
+            margin: 15px 0;
         }
 
         .phrase-box {
             text-align: left;
             min-height: 100px;
+            margin-bottom: 15px;
         }
 
         .phrase-title {
@@ -62,14 +65,14 @@ components.html("""
             color: #aaa;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .phrase-en {
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: #fff;
             font-weight: bold;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .phrase-phonetic {
@@ -82,22 +85,20 @@ components.html("""
         .phrase-pt {
             font-size: 0.85rem;
             color: #bbb;
-            margin-bottom: 10px;
         }
 
         .btn-group {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 12px;
         }
 
         .btn {
             background: #FF4B4B;
             border: none;
             color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
             font-weight: bold;
             cursor: pointer;
             flex: 1;
@@ -109,11 +110,12 @@ components.html("""
         }
 
         .btn-audio {
-            background: #333;
+            background: #2b2b2b;
+            border: 1px solid #444;
         }
 
         .btn-audio:hover {
-            background: #444;
+            background: #3b3b3b;
         }
     </style>
 </head>
@@ -141,7 +143,6 @@ components.html("""
     <script>
         let currentPhraseText = "";
 
-        // Função para gerar uma guia de pronúncia aproximada (quebra fonética estilo "prat-ice")
         function generatePhonetic(text) {
             return text
                 .toLowerCase()
@@ -152,14 +153,13 @@ components.html("""
                 .replace(/to/g, "tu")
                 .replace(/are/g, "ar")
                 .replace(/is/g, "iz")
-                .replace(/([aeiou])\1/g, "$1") // suaviza vogais dobradas
+                .replace(/([aeiou])\1/g, "$1")
                 .split('')
                 .join(' ')
                 .replace(/\s+s\s+/g, ' s ')
                 .replace(/  +/g, ' ');
         }
 
-        // Tradutor simulado/integrado para dar suporte às frases da API
         async function fetchAndTranslateQuote() {
             document.getElementById("phraseEn").innerText = '"Carregando nova frase..."';
             document.getElementById("phrasePhonetic").innerText = "Pronúncia: ...";
@@ -172,11 +172,9 @@ components.html("""
                 currentPhraseText = data.content;
                 document.getElementById("phraseEn").innerText = `"${data.content}" (${data.author})`;
                 
-                // Gerando a fonética simulada baseada nas letras
                 let phoneticGuide = generatePhonetic(data.content);
                 document.getElementById("phrasePhonetic").innerText = `🗣️ Pronúncia guiada: [ ${phoneticGuide} ]`;
 
-                // Traduzindo via API gratuita do MyMemory para português
                 const transResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(data.content)}&langpair=en|pt`);
                 const transData = await transResponse.json();
                 
@@ -259,4 +257,4 @@ components.html("""
     </script>
 </body>
 </html>
-""", height=550, scrolling=False)
+""", height=560, scrolling=False)
