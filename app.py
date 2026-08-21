@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="English Word Clock & Dynamic Phrases", page_icon="⏰", layout="centered")
+st.set_page_config(page_title="English Word Clock & Phrases", page_icon="⏰", layout="centered")
 
 components.html("""
 <!DOCTYPE html>
@@ -127,7 +127,7 @@ components.html("""
         <div class="divider"></div>
 
         <div class="phrase-box">
-            <div class="phrase-title">🌐 Live Internet Quote + Guide</div>
+            <div class="phrase-title">💬 Everyday English & Business Expressions</div>
             <div class="phrase-en" id="phraseEn">"Buscando frase..."</div>
             <div class="phrase-phonetic" id="phrasePhonetic">Pronúncia: ---</div>
             <div class="phrase-pt" id="phrasePt">Tradução: ---</div>
@@ -135,70 +135,40 @@ components.html("""
 
         <div class="btn-group">
             <button class="btn btn-audio" onclick="speakPhrase()">🔊 Ouvir</button>
-            <button class="btn" onclick="fetchAndTranslateQuote()">Nova Frase 🌐</button>
+            <button class="btn" onclick="getRandomPhrase()">Nova Frase 🔄</button>
         </div>
     </div>
 
     <script>
+        // Banco de dados interno robusto com dezenas de expressões do cotidiano e negócios
+        const phraseDatabase = [
+            { en: "Practice makes perfect.", phonetic: "prác-tis méiks pər-fekt", pt: "A prática leva à perfeição." },
+            { en: "Let's call it a day.", phonetic: "lets kól it ə dei", pt: "Por hoje é só / Vamos encerrar por aqui." },
+            { en: "It's up to you.", phonetic: "its áp tu iu", pt: "Você que sabe / A escolha é sua." },
+            { en: "Take your time.", phonetic: "teik ior taim", pt: "Não tenha pressa / Vá com calma." },
+            { en: "So far, so good.", phonetic: "sou far, sou gud", pt: "Até aqui, tudo bem." },
+            { en: "I'll keep you posted.", phonetic: "ail kiip iu poust-ed", pt: "Te mantenho informado." },
+            { en: "Out of the blue.", phonetic: "aut ov dhi blu", pt: "Do nada / De repente." },
+            { en: "Cost an arm and a leg.", phonetic: "kost an arm ənd ə leg", pt: "Custar uma fortuna / O olho da cara." },
+            { en: "Keep me in the loop.", phonetic: "kiip mi in dhi lup", pt: "Me mantenha informado / atualizado." },
+            { en: "Back to the drawing board.", phonetic: "bak tu dhi dró-ing bord", pt: "Voltar à estaca zero / Refazer o plano." },
+            { en: "Action is the foundational key to all success.", phonetic: "ák-shun iz dhi foun-déi-shun-al kii tu ol sak-sés", pt: "A ação é a chave fundamental para todo o sucesso." },
+            { en: "Don't watch the clock; keep going.", phonetic: "dont uótch dhi klok; kiip gó-ing", pt: "Não olhe para o relógio; continue indo." },
+            { en: "Better late than never.", phonetic: "bé-ter leit dhan né-ver", pt: "Antes tarde do que nunca." },
+            { en: "Actions speak louder than words.", phonetic: "ák-shunz spiik láu-der dhan uordz", pt: "Ações falam mais alto que palavras." },
+            { en: "Every cloud has a silver lining.", phonetic: "év-ri klaud héz ə síl-ver lái-ning", pt: "Há males que vêm para o bem." }
+        ];
+
         let currentPhraseText = "";
 
-        function generatePhonetic(text) {
-            return text
-                .toLowerCase()
-                .replace(/ing\b/g, "in'")
-                .replace(/tion\b/g, "shun")
-                .replace(/the/g, "dha")
-                .replace(/you/g, "iu")
-                .replace(/to/g, "tu")
-                .replace(/are/g, "ar")
-                .replace(/is/g, "iz")
-                .replace(/([aeiou])\1/g, "$1")
-                .split('')
-                .join(' ')
-                .replace(/\s+s\s+/g, ' s ')
-                .replace(/  +/g, ' ');
-        }
-
-        async function fetchAndTranslateQuote() {
-            document.getElementById("phraseEn").innerText = '"Carregando nova frase..."';
-            document.getElementById("phrasePhonetic").innerText = "Pronúncia: ...";
-            document.getElementById("phrasePt").innerText = "Tradução: ...";
+        function getRandomPhrase() {
+            const randomIndex = Math.floor(Math.random() * phraseDatabase.length);
+            const item = phraseDatabase[randomIndex];
             
-            try {
-                // Usando a ZenQuotes com proxy CORS aberto para buscar frases reais e variadas online
-                const response = await fetch('https://corsproxy.io/?https://zenquotes.io/api/random');
-                const data = await response.json();
-                
-                if (data && data[0]) {
-                    currentPhraseText = data[0].q;
-                    document.getElementById("phraseEn").innerText = `"${data[0].q}" (${data[0].a})`;
-                    
-                    let phoneticGuide = generatePhonetic(data[0].q);
-                    document.getElementById("phrasePhonetic").innerText = `🗣️ Pronúncia guiada: [ ${phoneticGuide} ]`;
-
-                    const transResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(data[0].q)}&langpair=en|pt`);
-                    const transData = await transResponse.json();
-                    
-                    if(transData && transData.responseData) {
-                        document.getElementById("phrasePt").innerText = `🇧🇷 Tradução: "${transData.responseData.translatedText}"`;
-                    } else {
-                        document.getElementById("phrasePt").innerText = "🇧🇷 Tradução indisponível no momento.";
-                    }
-                }
-            } catch (error) {
-                // Lista de resgate caso ocorra algum bloqueio de rede
-                const fallbackPool = [
-                    { en: "Action is the foundational key to all success.", pt: "A ação é a chave fundamental para todo o sucesso." },
-                    { en: "Don't watch the clock; do what it does. Keep going.", pt: "Não olhe para o relógio; faça o que ele faz. Continue indo." },
-                    { en: "Everything you can imagine is real.", pt: "Tudo o que você pode imaginar é real." }
-                ];
-                const randomFallback = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
-                
-                currentPhraseText = randomFallback.en;
-                document.getElementById("phraseEn").innerText = `"${currentPhraseText}"`;
-                document.getElementById("phrasePhonetic").innerText = `🗣️ Pronúncia guiada: [ ${generatePhonetic(currentPhraseText)} ]`;
-                document.getElementById("phrasePt").innerText = `🇧🇷 Tradução: "${randomFallback.pt}"`;
-            }
+            currentPhraseText = item.en;
+            document.getElementById("phraseEn").innerText = `"${item.en}"`;
+            document.getElementById("phrasePhonetic").innerText = `🗣️ Pronúncia guiada: [ ${item.phonetic} ]`;
+            document.getElementById("phrasePt").innerText = `🇧🇷 Tradução: "${item.pt}"`;
         }
 
         function speakPhrase() {
@@ -260,7 +230,7 @@ components.html("""
             document.getElementById("digitalClock").innerText = `BRT: ${timeString}`;
         }
 
-        fetchAndTranslateQuote();
+        getRandomPhrase();
         setInterval(updateClock, 1000);
         updateClock();
     </script>
