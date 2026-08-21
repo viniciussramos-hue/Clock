@@ -1,9 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="English Word Clock & Phrases", page_icon="⏰", layout="centered")
+st.set_page_config(page_title="English Word Clock & Dynamic Phrases", page_icon="⏰", layout="centered")
 
-# Usando o componente nativo de HTML do Streamlit para renderizar o design perfeitamente
 components.html("""
 <!DOCTYPE html>
 <html lang="en">
@@ -27,72 +26,87 @@ components.html("""
         .central-card {
             background-color: #161616;
             border: 2px solid #FF4B4B;
-            padding: 35px;
+            padding: 30px;
             border-radius: 20px;
             box-shadow: 0px 8px 30px rgba(0,0,0,0.8);
             text-align: center;
-            width: 450px;
+            width: 480px;
         }
 
         .word-time {
             color: #FF4B4B;
-            font-size: 2.3rem;
+            font-size: 2.2rem;
             font-weight: bold;
             margin: 0;
         }
 
         .digital-time {
             color: #999;
-            font-size: 1.1rem;
-            margin: 10px 0 20px 0;
+            font-size: 1rem;
+            margin: 8px 0 15px 0;
             letter-spacing: 1px;
         }
 
         .divider {
             border-top: 1px solid #333;
-            margin: 20px 0;
+            margin: 15px 0;
+        }
+
+        .phrase-box {
+            text-align: left;
+            min-height: 80px;
         }
 
         .phrase-title {
             font-size: 0.75rem;
             color: #aaa;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            text-align: left;
-            margin-bottom: 6px;
-        }
-
-        .phrase-en {
-            font-size: 1.15rem;
-            color: #fff;
-            font-weight: bold;
-            text-align: left;
+            letter-spacing: 1px;
             margin-bottom: 4px;
         }
 
-        .phrase-pt {
-            font-size: 0.95rem;
+        .phrase-en {
+            font-size: 1.05rem;
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .phrase-author {
+            font-size: 0.85rem;
             color: #bbb;
             font-style: italic;
-            text-align: left;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
         }
 
         .btn {
             background: #FF4B4B;
             border: none;
             color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
             font-weight: bold;
             cursor: pointer;
-            width: 100%;
+            flex: 1;
             transition: background 0.2s;
         }
 
         .btn:hover {
             background: #ff2a2a;
+        }
+
+        .btn-audio {
+            background: #333;
+        }
+
+        .btn-audio:hover {
+            background: #444;
         }
     </style>
 </head>
@@ -103,29 +117,49 @@ components.html("""
         <div class="digital-time" id="digitalClock">BRT: --:--:--</div>
         
         <div class="divider"></div>
-        
-        <div class="phrase-title">💬 English Daily Phrase</div>
-        <div class="phrase-en" id="phraseEn">"Loading..."</div>
-        <div class="phrase-pt" id="phrasePt">Carregando...</div>
-        
-        <button class="btn" onclick="changePhrase()">Nova Frase 🔄</button>
+
+        <div class="phrase-box">
+            <div class="phrase-title">🌐 Live Internet Quote (English)</div>
+            <div class="phrase-en" id="phraseEn">"Buscando frase na internet..."</div>
+            <div class="phrase-author" id="phraseAuthor">---</div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-audio" onclick="speakPhrase()">🔊 Ouvir</button>
+            <button class="btn" onclick="fetchRandomQuote()">Nova Frase 🌐</button>
+        </div>
     </div>
 
     <script>
-        const dailyPhrases = [
-            { en: "Out of the blue.", pt: "Do nada / De repente." },
-            { en: "Let's call it a day.", pt: "Por hoje é só / Vamos encerrar." },
-            { en: "It's up to you.", pt: "Você que sabe / A escolha é sua." },
-            { en: "Take your time.", pt: "Não tenha pressa / Vá com calma." },
-            { en: "So far, so good.", pt: "Até aqui, tudo bem." },
-            { en: "I'll keep you posted.", pt: "Te mantenho informado." },
-            { en: "Cost an arm and a leg.", pt: "Custar uma fortuna / O olho da cara." }
-        ];
+        let currentPhraseText = "";
 
-        function changePhrase() {
-            const randomIndex = Math.floor(Math.random() * dailyPhrases.length);
-            document.getElementById("phraseEn").innerText = `"${dailyPhrases[randomIndex].en}"`;
-            document.getElementById("phrasePt").innerText = dailyPhrases[randomIndex].pt;
+        // Função para buscar frases reais de uma API pública da internet
+        async function fetchRandomQuote() {
+            document.getElementById("phraseEn").innerText = '"Carregando nova frase..."';
+            document.getElementById("phraseAuthor").innerText = "Aguarde...";
+            
+            try {
+                // API pública gratuita de citações em inglês
+                const response = await fetch('https://api.quotable.io/random');
+                const data = await response.json();
+                
+                currentPhraseText = data.content;
+                document.getElementById("phraseEn").innerText = `"${data.content}"`;
+                document.getElementById("phraseAuthor").innerText = `— ${data.author}`;
+            } catch (error) {
+                // Fallback caso caia a internet
+                currentPhraseText = "Practice makes perfect.";
+                document.getElementById("phraseEn").innerText = `"${currentPhraseText}"`;
+                document.getElementById("phraseAuthor").innerText = "— Proverb (Offline mode)";
+            }
+        }
+
+        function speakPhrase() {
+            if ('speechSynthesis' in window && currentPhraseText) {
+                const utterance = new SpeechSynthesisUtterance(currentPhraseText);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
         function numberToWords(n) {
@@ -179,10 +213,11 @@ components.html("""
             document.getElementById("digitalClock").innerText = `BRT: ${timeString}`;
         }
 
-        changePhrase();
+        // Carrega a primeira frase ao abrir e inicia o relógio
+        fetchRandomQuote();
         setInterval(updateClock, 1000);
         updateClock();
     </script>
 </body>
 </html>
-""", height=500, scrolling=False)
+""", height=520, scrolling=False)
