@@ -75,7 +75,7 @@ for _ in range(300):
     
     p = st.session_state.current_phrase
 
-    # Nota: As chaves do CSS agora usam {{ e }} para escapar da f-string do Python
+    # Adicionado unsafe_allow_html=True para renderizar o layout corretamente
     card_placeholder.markdown(f"""
         <style>
         .block-container {{
