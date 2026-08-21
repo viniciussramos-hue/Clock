@@ -6,72 +6,6 @@ import random
 
 st.set_page_config(page_title="English Word Clock & Phrases", page_icon="⏰", layout="centered")
 
-# Injetando o CSS customizado para replicar o design exato do card centralizado
-st.markdown("""
-    <style>
-    /* Remove padding excessivo do Streamlit para centralizar melhor */
-    .block-container {
-        padding-top: 3rem;
-        max-width: 700px;
-    }
-    
-    /* Caixa principal estilo card */
-    .central-card {
-        background-color: #161616;
-        border: 2px solid #FF4B4B;
-        padding: 40px;
-        border-radius: 20px;
-        box-shadow: 0px 8px 30px rgba(0,0,0,0.8);
-        text-align: center;
-        margin-top: 20px;
-    }
-
-    .word-time {
-        color: #FF4B4B;
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin: 0;
-    }
-
-    .digital-time {
-        color: #999;
-        font-size: 1.1rem;
-        margin: 10px 0 25px 0;
-        letter-spacing: 1px;
-    }
-
-    .divider {
-        border-top: 1px solid #333;
-        margin: 20px 0;
-    }
-
-    .phrase-title {
-        font-size: 0.8rem;
-        color: #aaa;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        text-align: left;
-        margin-bottom: 8px;
-    }
-
-    .phrase-en {
-        font-size: 1.2rem;
-        color: #fff;
-        font-weight: bold;
-        text-align: left;
-        margin-bottom: 4px;
-    }
-
-    .phrase-pt {
-        font-size: 1rem;
-        color: #bbb;
-        font-style: italic;
-        text-align: left;
-        margin-bottom: 20px;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # Funções de conversão de tempo
 def number_to_words(n):
     ones = ["o'clock", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", 
@@ -119,14 +53,18 @@ phrases_list = [
     {"en": "Cost an arm and a leg.", "pt": "Custar uma fortuna / O olho da cara."}
 ]
 
-# Gerenciando a frase atual na sessão para não mudar toda vez que o relógio atualizar o segundo
+# Gerenciando a frase atual na sessão
 if "current_phrase" not in st.session_state:
     st.session_state.current_phrase = random.choice(phrases_list)
 
-# Placeholders para atualização fluida
-clock_container = st.empty()
+# Botão fora do container para sortear a frase sem conflito de renderização
+if st.button("Nova Frase 🔄", use_container_width=True):
+    st.session_state.current_phrase = random.choice(phrases_list)
 
-# Loop para atualizar o relógio minuto a minuto / segundo a segundo
+# Placeholder para o card centralizado
+card_placeholder = st.empty()
+
+# Loop de atualização do relógio
 for _ in range(300):
     brasilia_tz = ZoneInfo("America/Sao_Paulo")
     now = datetime.now(brasilia_tz)
@@ -137,25 +75,72 @@ for _ in range(300):
     
     p = st.session_state.current_phrase
 
-    # Renderizando a estrutura dentro do card centralizado
-    with clock_container.container():
-        st.markdown(f"""
-            <div class="central-card">
-                <div class="word-time">{texto_horas}</div>
-                <div class="digital-time">BRT: {hora_digital}</div>
-                
-                <div class="divider"></div>
-                
-                <div class="phrase-title">💬 English Daily Phrase</div>
-                <div class="phrase-en">"{p['en']}"</div>
-                <div class="phrase-pt">{p['pt']}</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # Botão do Streamlit posicionado logo abaixo (para sortear nova frase)
-        if st.button("Nova Frase 🔄", use_container_width=True):
-            st.session_state.current_phrase = random.choice(phrases_list)
-            st.rerun()
+    # Renderizando todo o card com HTML puro de forma segura
+    card_placeholder.markdown(f"""
+        <style>
+        .block-container {{
+            padding-top: 2rem;
+            max-width: 650px;
+        }
+        .central-card {{
+            background-color: #161616;
+            border: 2px solid #FF4B4B;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0px 8px 30px rgba(0,0,0,0.8);
+            text-align: center;
+            margin-top: 10px;
+        }
+        .word-time {{
+            color: #FF4B4B;
+            font-size: 2.3rem;
+            font-weight: bold;
+            margin: 0;
+        }}
+        .digital-time {{
+            color: #999;
+            font-size: 1.1rem;
+            margin: 10px 0 20px 0;
+            letter-spacing: 1px;
+        }}
+        .divider {{
+            border-top: 1px solid #333;
+            margin: 20px 0;
+        }}
+        .phrase-title {{
+            font-size: 0.75rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-align: left;
+            margin-bottom: 6px;
+        }}
+        .phrase-en {{
+            font-size: 1.15rem;
+            color: #fff;
+            font-weight: bold;
+            text-align: left;
+            margin-bottom: 4px;
+        }}
+        .phrase-pt {{
+            font-size: 0.95rem;
+            color: #bbb;
+            font-style: italic;
+            text-align: left;
+        }}
+        </style>
+
+        <div class="central-card">
+            <div class="word-time">{texto_horas}</div>
+            <div class="digital-time">BRT: {hora_digital}</div>
+            
+            <div class="divider"></div>
+            
+            <div class="phrase-title">💬 English Daily Phrase</div>
+            <div class="phrase-en">"{p['en']}"</div>
+            <div class="phrase-pt">{p['pt']}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
     time.sleep(1)
     st.rerun()
