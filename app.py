@@ -33,7 +33,6 @@ components.html("""
             width: 520px;
         }
 
-        /* Horas maiores e mais destacadas */
         .word-time {
             color: #FF4B4B;
             font-size: 2.7rem;
@@ -56,7 +55,7 @@ components.html("""
 
         .phrase-box {
             text-align: left;
-            min-height: 100px;
+            min-height: 110px;
             margin-bottom: 15px;
         }
 
@@ -166,29 +165,39 @@ components.html("""
             document.getElementById("phrasePt").innerText = "Tradução: ...";
             
             try {
-                const response = await fetch('https://api.quotable.io/random');
+                // Usando a ZenQuotes com proxy CORS aberto para buscar frases reais e variadas online
+                const response = await fetch('https://corsproxy.io/?https://zenquotes.io/api/random');
                 const data = await response.json();
                 
-                currentPhraseText = data.content;
-                document.getElementById("phraseEn").innerText = `"${data.content}" (${data.author})`;
-                
-                let phoneticGuide = generatePhonetic(data.content);
-                document.getElementById("phrasePhonetic").innerText = `🗣️ Pronúncia guiada: [ ${phoneticGuide} ]`;
+                if (data && data[0]) {
+                    currentPhraseText = data[0].q;
+                    document.getElementById("phraseEn").innerText = `"${data[0].q}" (${data[0].a})`;
+                    
+                    let phoneticGuide = generatePhonetic(data[0].q);
+                    document.getElementById("phrasePhonetic").innerText = `🗣️ Pronúncia guiada: [ ${phoneticGuide} ]`;
 
-                const transResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(data.content)}&langpair=en|pt`);
-                const transData = await transResponse.json();
-                
-                if(transData && transData.responseData) {
-                    document.getElementById("phrasePt").innerText = `🇧🇷 Tradução: "${transData.responseData.translatedText}"`;
-                } else {
-                    document.getElementById("phrasePt").innerText = "🇧🇷 Tradução indisponível no momento.";
+                    const transResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(data[0].q)}&langpair=en|pt`);
+                    const transData = await transResponse.json();
+                    
+                    if(transData && transData.responseData) {
+                        document.getElementById("phrasePt").innerText = `🇧🇷 Tradução: "${transData.responseData.translatedText}"`;
+                    } else {
+                        document.getElementById("phrasePt").innerText = "🇧🇷 Tradução indisponível no momento.";
+                    }
                 }
-
             } catch (error) {
-                currentPhraseText = "Practice makes perfect.";
+                // Lista de resgate caso ocorra algum bloqueio de rede
+                const fallbackPool = [
+                    { en: "Action is the foundational key to all success.", pt: "A ação é a chave fundamental para todo o sucesso." },
+                    { en: "Don't watch the clock; do what it does. Keep going.", pt: "Não olhe para o relógio; faça o que ele faz. Continue indo." },
+                    { en: "Everything you can imagine is real.", pt: "Tudo o que você pode imaginar é real." }
+                ];
+                const randomFallback = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+                
+                currentPhraseText = randomFallback.en;
                 document.getElementById("phraseEn").innerText = `"${currentPhraseText}"`;
-                document.getElementById("phrasePhonetic").innerText = "🗣️ Pronúncia guiada: [ prác-tis méiks pər-fekt ]";
-                document.getElementById("phrasePt").innerText = '🇧🇷 Tradução: "A prática leva à perfeição."';
+                document.getElementById("phrasePhonetic").innerText = `🗣️ Pronúncia guiada: [ ${generatePhonetic(currentPhraseText)} ]`;
+                document.getElementById("phrasePt").innerText = `🇧🇷 Tradução: "${randomFallback.pt}"`;
             }
         }
 
