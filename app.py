@@ -26,69 +26,76 @@ components.html("""
         .central-card {
             background-color: #161616;
             border: 2px solid #FF4B4B;
-            padding: 30px;
+            padding: 25px;
             border-radius: 20px;
             box-shadow: 0px 8px 30px rgba(0,0,0,0.8);
             text-align: center;
-            width: 480px;
+            width: 500px;
         }
 
         .word-time {
             color: #FF4B4B;
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: bold;
             margin: 0;
         }
 
         .digital-time {
             color: #999;
-            font-size: 1rem;
-            margin: 8px 0 15px 0;
+            font-size: 0.95rem;
+            margin: 6px 0 12px 0;
             letter-spacing: 1px;
         }
 
         .divider {
             border-top: 1px solid #333;
-            margin: 15px 0;
+            margin: 12px 0;
         }
 
         .phrase-box {
             text-align: left;
-            min-height: 80px;
+            min-height: 100px;
         }
 
         .phrase-title {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #aaa;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .phrase-en {
-            font-size: 1.05rem;
+            font-size: 1rem;
             color: #fff;
             font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .phrase-phonetic {
+            font-size: 0.85rem;
+            color: #4da6ff;
+            font-style: italic;
             margin-bottom: 4px;
         }
 
-        .phrase-author {
+        .phrase-pt {
             font-size: 0.85rem;
             color: #bbb;
-            font-style: italic;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .btn-group {
             display: flex;
             gap: 10px;
+            margin-top: 10px;
         }
 
         .btn {
             background: #FF4B4B;
             border: none;
             color: white;
-            padding: 9px 12px;
+            padding: 8px 12px;
             border-radius: 6px;
             font-size: 0.85rem;
             font-weight: bold;
@@ -119,38 +126,71 @@ components.html("""
         <div class="divider"></div>
 
         <div class="phrase-box">
-            <div class="phrase-title">🌐 Live Internet Quote (English)</div>
-            <div class="phrase-en" id="phraseEn">"Buscando frase na internet..."</div>
-            <div class="phrase-author" id="phraseAuthor">---</div>
+            <div class="phrase-title">🌐 Live Internet Quote + Guide</div>
+            <div class="phrase-en" id="phraseEn">"Buscando frase..."</div>
+            <div class="phrase-phonetic" id="phrasePhonetic">Pronúncia: ---</div>
+            <div class="phrase-pt" id="phrasePt">Tradução: ---</div>
         </div>
 
         <div class="btn-group">
             <button class="btn btn-audio" onclick="speakPhrase()">🔊 Ouvir</button>
-            <button class="btn" onclick="fetchRandomQuote()">Nova Frase 🌐</button>
+            <button class="btn" onclick="fetchAndTranslateQuote()">Nova Frase 🌐</button>
         </div>
     </div>
 
     <script>
         let currentPhraseText = "";
 
-        // Função para buscar frases reais de uma API pública da internet
-        async function fetchRandomQuote() {
+        // Função para gerar uma guia de pronúncia aproximada (quebra fonética estilo "prat-ice")
+        function generatePhonetic(text) {
+            return text
+                .toLowerCase()
+                .replace(/ing\b/g, "in'")
+                .replace(/tion\b/g, "shun")
+                .replace(/the/g, "dha")
+                .replace(/you/g, "iu")
+                .replace(/to/g, "tu")
+                .replace(/are/g, "ar")
+                .replace(/is/g, "iz")
+                .replace(/([aeiou])\1/g, "$1") // suaviza vogais dobradas
+                .split('')
+                .join(' ')
+                .replace(/\s+s\s+/g, ' s ')
+                .replace(/  +/g, ' ');
+        }
+
+        // Tradutor simulado/integrado para dar suporte às frases da API
+        async function fetchAndTranslateQuote() {
             document.getElementById("phraseEn").innerText = '"Carregando nova frase..."';
-            document.getElementById("phraseAuthor").innerText = "Aguarde...";
+            document.getElementById("phrasePhonetic").innerText = "Pronúncia: ...";
+            document.getElementById("phrasePt").innerText = "Tradução: ...";
             
             try {
-                // API pública gratuita de citações em inglês
                 const response = await fetch('https://api.quotable.io/random');
                 const data = await response.json();
                 
                 currentPhraseText = data.content;
-                document.getElementById("phraseEn").innerText = `"${data.content}"`;
-                document.getElementById("phraseAuthor").innerText = `— ${data.author}`;
+                document.getElementById("phraseEn").innerText = `"${data.content}" (${data.author})`;
+                
+                // Gerando a fonética simulada baseada nas letras
+                let phoneticGuide = generatePhonetic(data.content);
+                document.getElementById("phrasePhonetic").innerText = `🗣️ Pronúncia guiada: [ ${phoneticGuide} ]`;
+
+                // Traduzindo via API gratuita do MyMemory para português
+                const transResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(data.content)}&langpair=en|pt`);
+                const transData = await transResponse.json();
+                
+                if(transData && transData.responseData) {
+                    document.getElementById("phrasePt").innerText = `🇧🇷 Tradução: "${transData.responseData.translatedText}"`;
+                } else {
+                    document.getElementById("phrasePt").innerText = "🇧🇷 Tradução indisponível no momento.";
+                }
+
             } catch (error) {
-                // Fallback caso caia a internet
                 currentPhraseText = "Practice makes perfect.";
                 document.getElementById("phraseEn").innerText = `"${currentPhraseText}"`;
-                document.getElementById("phraseAuthor").innerText = "— Proverb (Offline mode)";
+                document.getElementById("phrasePhonetic").innerText = "🗣️ Pronúncia guiada: [ prác-tis méiks pər-fekt ]";
+                document.getElementById("phrasePt").innerText = '🇧🇷 Tradução: "A prática leva à perfeição."';
             }
         }
 
@@ -213,11 +253,10 @@ components.html("""
             document.getElementById("digitalClock").innerText = `BRT: ${timeString}`;
         }
 
-        // Carrega a primeira frase ao abrir e inicia o relógio
-        fetchRandomQuote();
+        fetchAndTranslateQuote();
         setInterval(updateClock, 1000);
         updateClock();
     </script>
 </body>
 </html>
-""", height=520, scrolling=False)
+""", height=550, scrolling=False)
