@@ -57,7 +57,7 @@ phrases_list = [
 if "current_phrase" not in st.session_state:
     st.session_state.current_phrase = random.choice(phrases_list)
 
-# Botão fora do container para sortear a frase sem conflito de renderização
+# Botão fora do container para sortear a frase
 if st.button("Nova Frase 🔄", use_container_width=True):
     st.session_state.current_phrase = random.choice(phrases_list)
 
@@ -75,13 +75,13 @@ for _ in range(300):
     
     p = st.session_state.current_phrase
 
-    # Renderizando todo o card com HTML puro de forma segura
+    # Nota: As chaves do CSS agora usam {{ e }} para escapar da f-string do Python
     card_placeholder.markdown(f"""
         <style>
         .block-container {{
             padding-top: 2rem;
             max-width: 650px;
-        }
+        }}
         .central-card {{
             background-color: #161616;
             border: 2px solid #FF4B4B;
@@ -90,7 +90,7 @@ for _ in range(300):
             box-shadow: 0px 8px 30px rgba(0,0,0,0.8);
             text-align: center;
             margin-top: 10px;
-        }
+        }}
         .word-time {{
             color: #FF4B4B;
             font-size: 2.3rem;
